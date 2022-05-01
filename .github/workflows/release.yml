@@ -3,6 +3,7 @@ name: Release vlmcsd docker
 on:
   push:
     paths:
+      - "tag"
       - "Dockerfile"
       - ".github/workflows/release.yml"
   workflow_dispatch:
@@ -14,6 +15,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
+      - name: Set env
+        run: |
+          echo "TAG=$(cat tag)" >> $GITHUB_ENV
+      
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
 
@@ -29,6 +34,11 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v2
         with:
+          build-args: |
+            TAG=${{ env.TAG }}
+            REPOSITORY=hades001/vlmcsd
           platforms: linux/amd64,linux/arm/v7,linux/arm64
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/vlmcsd:latest
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/vlmcsd:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/vlmcsd:${{ env.TAG }}
